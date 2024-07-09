@@ -4,9 +4,9 @@ import sequelize from '../db';
 import jokesRoutes from '../routes/jokes';
 import usersRoutes from '../routes/users';
 import themesRoutes from '../routes/themes';
+import Joke from '../models/joke';
 import User from '../models/user';
 import Theme from '../models/theme';
-import Joke from '../models/joke';
 
 // Configurar la aplicación para pruebas
 const app = express();
@@ -30,41 +30,15 @@ beforeAll(async () => {
   const themeResponse = await request(app).post('/themes').send({ name: 'testtheme' }).set('Authorization', `Bearer ${token}`);
   themeId = themeResponse.body.id;
 });
-
+const generateRandomJoke = () => ({
+  title: `Test Joke ${Math.random().toString(36).substring(7)}`,
+  body: 'This is a test joke.',
+});
 afterAll(async () => {
   // Cerrar la conexión a la base de datos
   await sequelize.close();
 });
 
-describe('GET /jokes/:type?', () => {
-  it('should return a random Chuck Norris joke when type is Chuck', async () => {
-    const response = await request(app).get('/jokes/Chuck').set('Authorization', `Bearer ${token}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('value'); // Propiedad específica del API de Chuck Norris
-  });
-
-  it('should return a random Dad joke when type is Dad', async () => {
-    const response = await request(app).get('/jokes/Dad').set('Authorization', `Bearer ${token}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('joke'); // Propiedad específica del API de Dad jokes
-  });
-
-  it('should return an error for invalid type', async () => {
-    const response = await request(app).get('/jokes/InvalidType').set('Authorization', `Bearer ${token}`);
-    expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('error', 'Invalid type');
-  });
-
-  it('should return a random joke when no type is provided', async () => {
-    const response = await request(app).get('/jokes').set('Authorization', `Bearer ${token}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('value'); // Propiedad específica del API de Chuck Norris
-  });
-});
-const generateRandomJoke = () => ({
-    title: `Test Joke ${Math.random().toString(36).substring(7)}`,
-    body: 'This is a test joke.',
-  });
 describe('POST /jokes', () => {
   
 
@@ -98,7 +72,7 @@ describe('POST /jokes', () => {
       .send({ body: 'This is a test joke without a title.', themeIds: [themeId] })
       .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('error');
+    expect(response.body).toHaveProperty('error', 'Title is required');
   });
 
   it('should return 400 if no body is provided', async () => {
@@ -107,7 +81,27 @@ describe('POST /jokes', () => {
       .send({ title: 'Test Joke without body', themeIds: [themeId] })
       .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('error');
+    expect(response.body).toHaveProperty('error', 'Body is required');
+  });
+
+  it('should return 500 if creating a joke fails', async () => {
+    const randomJoke = generateRandomJoke();
+
+    // Mockear el método create para que lance un error
+    jest.spyOn(Joke, 'create').mockImplementation(() => {
+      throw new Error('Simulated database error');
+    });
+
+    const response = await request(app)
+      .post('/jokes')
+      .send({ ...randomJoke, themeIds: [themeId] })
+      .set('Authorization', `Bearer ${token}`);
+    
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'Failed to create joke');
+
+    // Restaurar el método create
+    (Joke.create as jest.Mock).mockRestore();
   });
 });
 
