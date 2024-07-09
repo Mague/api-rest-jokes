@@ -1,0 +1,195 @@
+openapi: 3.0.0
+info:
+  title: Jokes API
+  version: 1.0.0
+  description: API para la gestión de chistes, usuarios y temas.
+paths:
+  /users/register:
+    post:
+      summary: Crear un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+              required:
+                - name
+                - password
+      responses:
+        '201':
+          description: Usuario creado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: El usuario ya existe
+        '500':
+          description: Error al crear el usuario
+  /users/login:
+    post:
+      summary: Iniciar sesión de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+              required:
+                - name
+                - password
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Credenciales inválidas
+        '500':
+          description: Error al iniciar sesión
+  /themes:
+    post:
+      summary: Crear un nuevo tema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: Tema creado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '500':
+          description: Error al crear el tema
+    get:
+      summary: Obtener todos los temas
+      responses:
+        '200':
+          description: Lista de temas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Theme'
+        '500':
+          description: Error al obtener los temas
+  /jokes:
+    post:
+      summary: Crear un nuevo chiste
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+                themeIds:
+                  type: array
+                  items:
+                    type: integer
+              required:
+                - title
+                - body
+      responses:
+        '201':
+          description: Chiste creado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Joke'
+        '400':
+          description: El título del chiste ya existe
+        '500':
+          description: Error al crear el chiste
+  /jokes/{type}:
+    get:
+      summary: Obtener un chiste aleatorio por tipo
+      parameters:
+        - in: path
+          name: type
+          schema:
+            type: string
+          required: false
+          description: Tipo de chiste (Chuck, Dad)
+      responses:
+        '200':
+          description: Chiste aleatorio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  joke:
+                    type: string
+        '400':
+          description: Tipo de chiste inválido
+        '500':
+          description: Error al obtener el chiste
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        password:
+          type: string
+    Theme:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Joke:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        author_id:
+          type: integer
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
