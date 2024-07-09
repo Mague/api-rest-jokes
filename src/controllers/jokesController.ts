@@ -20,22 +20,31 @@ export const getRandomJoke = async (req: Request, res: Response) => {
 };
 
 export const saveJoke = async (req: Request, res: Response) => {
-    const { title, body, themeIds } = req.body;
-    const authorId = req.user.id; // Obtener el ID del usuario autenticado
-    try {
-      const joke = await Joke.create({ title, body, author_id: authorId });
-      if (themeIds && themeIds.length > 0) {
-        await joke.setThemes(themeIds);
-      }
-      res.status(201).json(joke);
-    } catch (error: any) {
-      if (error.name === 'SequelizeUniqueConstraintError') {
-        res.status(400).json({ error: 'Joke title already exists' });
-      } else {
-        res.status(500).json({ error: 'Failed to create joke' });
-      }
+  const { title, body, themeIds } = req.body;
+  const authorId = req.user.id; // Obtener el ID del usuario autenticado
+
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  if (!body) {
+    return res.status(400).json({ error: 'Body is required' });
+  }
+
+  try {
+    const joke = await Joke.create({ title, body, author_id: authorId });
+    if (themeIds && themeIds.length > 0) {
+      await joke.setThemes(themeIds);
     }
-  };
+    res.status(201).json(joke);
+  } catch (error: any) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      res.status(400).json({ error: 'Joke title already exists' });
+    } else {
+      res.status(500).json({ error: 'Failed to create joke' });
+    }
+  }
+};
 
 export const updateJoke = async (req: Request, res: Response) => {
   const { id } = req.params;
