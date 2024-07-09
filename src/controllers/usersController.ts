@@ -2,24 +2,26 @@ import { Request, Response } from 'express';
 import User from '../models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
+import dotenv from 'dotenv';
+dotenv.config();
 const saltRounds = 10;
-const jwtSecret = 'your_jwt_secret';
+const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export const createUser = async (req: Request, res: Response) => {
-        const { name, password } = req.body;
-        try {
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-            const user = await User.create({ name, password: hashedPassword });
-            res.status(201).json(user);
-        } catch (error: any) {
-            if (error.name === 'SequelizeUniqueConstraintError') {
-                res.status(400).json({ error: 'User already exists' });
-            } else {
-                res.status(500).json({ error: 'Failed to create user' });
-            }
-        }
-    };
+  const { name, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const user = await User.create({ name, password: hashedPassword });
+    res.status(201).json(user);
+  } catch (error: any) {
+    console.log('---->',error.name);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      res.status(400).json({ error: 'User already exists' });
+    } else {
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  }
+};
 
 export const loginUser = async (req: Request, res: Response) => {
   const { name, password } = req.body;

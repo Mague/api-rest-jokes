@@ -8,6 +8,10 @@ const app = express();
 app.use(express.json());
 app.use('/users', usersRoutes);
 
+beforeAll(async () => {
+  await sequelize.sync({ force: true }); // Sincroniza la base de datos antes de todas las pruebas
+});
+
 afterAll(async () => {
   // Cerrar la conexión a la base de datos
   await sequelize.close();

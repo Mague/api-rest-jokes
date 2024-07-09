@@ -11,7 +11,10 @@ app.use('/themes', themesRoutes);
 app.use('/users', usersRoutes);
 
 let token: string;
-
+afterAll(async () => {
+  // Cerrar la conexión a la base de datos
+  await sequelize.close();
+});
 beforeAll(async () => {
   // Sincronizar la base de datos
   await sequelize.sync({ force: true });

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
+import dotenv from 'dotenv';
+dotenv.config();
 declare global {
     namespace Express {
       interface Request {
@@ -8,8 +9,8 @@ declare global {
       }
     }
   }
-
-const jwtSecret = 'your_jwt_secret';
+  
+const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
