@@ -25,15 +25,6 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
 
-  app:
-    build: .
-    container_name: api-rest-jokes
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-      - elasticsearch
-
 volumes:
   postgres_data:
   es_data:
