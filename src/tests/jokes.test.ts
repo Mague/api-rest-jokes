@@ -7,6 +7,9 @@ import themesRoutes from '../routes/themes';
 import Joke from '../models/joke';
 import User from '../models/user';
 import Theme from '../models/theme';
+import client from '../elasticsearch';
+
+jest.mock('../elasticsearch');
 
 // Configurar la aplicación para pruebas
 const app = express();
@@ -50,6 +53,37 @@ describe('POST /jokes', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('title', randomJoke.title);
+
+    // Verifica que el chiste fue indexado en Elasticsearch
+    expect(client.index).toHaveBeenCalled();
+  });
+
+  it('should search jokes from Elasticsearch', async () => {
+    const searchResponse = {
+      hits: {
+        hits: [
+          { _source: { title: 'Test Joke', body: 'This is a test joke.' } },
+        ],
+      },
+    };
+
+    (client.search as jest.Mock).mockResolvedValue(searchResponse);
+
+    const response = await request(app)
+      .get('/jokes/search')
+      .query({ query: 'Test' })
+      .set('Authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(searchResponse.hits.hits);
+  });
+
+  it('should return 400 if query parameter is not a string', async () => {
+    const response = await request(app)
+      .get('/jokes/search')
+      .query({ query: ['Test'] })
+      .set('Authorization', `Bearer ${token}`);
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', 'Invalid type');
   });
 
   it('should not allow duplicate joke titles', async () => {
@@ -103,6 +137,9 @@ describe('POST /jokes', () => {
     // Restaurar el método create
     (Joke.create as jest.Mock).mockRestore();
   });
+
+  
+
 });
 
 describe('PUT /jokes/:id', () => {

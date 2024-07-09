@@ -4,6 +4,7 @@ import User from '../models/user';
 import Theme from '../models/theme';
 import chuckService from '../services/chuckService';
 import dadService from '../services/dadService';
+import client from '../elasticsearch'; // Importa el cliente de Elasticsearch
 
 export const getRandomJoke = async (req: Request, res: Response) => {
   const { type } = req.params;
@@ -36,6 +37,19 @@ export const saveJoke = async (req: Request, res: Response) => {
     if (themeIds && themeIds.length > 0) {
       await joke.setThemes(themeIds);
     }
+
+    // Indexar el chiste en Elasticsearch
+    await client.index({
+      index: 'jokes',
+      id: joke.id.toString(),
+      body: {
+        title: joke.title,
+        body: joke.body,
+        author_id: joke.author_id,
+        themes: themeIds,
+      },
+    });
+
     res.status(201).json(joke);
   } catch (error: any) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -67,4 +81,29 @@ export const deleteJoke = async (req: Request, res: Response) => {
   }
   await joke.destroy();
   res.status(204).send();
+};
+
+export const getJokesFromElastic = async (req: Request, res: Response) => {
+  const { query } = req.query;
+
+  if (typeof query !== 'string') {
+    return res.status(400).json({ error: 'Query parameter must be a string' });
+  }
+
+  try {
+    const result = await client.search({
+      index: 'jokes',
+      body: {
+        query: {
+          match: {
+            title: query,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(result.hits.hits);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to search jokes' });
+  }
 };
