@@ -22,15 +22,13 @@ export const getRandomJoke = async (req: Request, res: Response) => {
 
 export const saveJoke = async (req: Request, res: Response) => {
   const { title, body, themeIds } = req.body;
-  const authorId = req.user.id; // Obtener el ID del usuario autenticado
-
-  if (!title) {
+  if (!title ) {
     return res.status(400).json({ error: 'Title is required' });
   }
-
-  if (!body) {
+  if (!body ) {
     return res.status(400).json({ error: 'Body is required' });
   }
+  const authorId = req.user.id; // Obtener el ID del usuario autenticado
 
   try {
     const joke = await Joke.create({ title, body, author_id: authorId });
@@ -38,15 +36,13 @@ export const saveJoke = async (req: Request, res: Response) => {
       await joke.setThemes(themeIds);
     }
 
-    // Indexar el chiste en Elasticsearch
+    // Indexar en Elasticsearch
     await client.index({
       index: 'jokes',
-      id: joke.id.toString(),
       body: {
+        id: joke.id,
         title: joke.title,
         body: joke.body,
-        author_id: joke.author_id,
-        themes: themeIds,
       },
     });
 
@@ -87,7 +83,7 @@ export const getJokesFromElastic = async (req: Request, res: Response) => {
   const { query } = req.query;
 
   if (typeof query !== 'string') {
-    return res.status(400).json({ error: 'Query parameter must be a string' });
+    return res.status(400).json({ error: 'Query parameter is required and must be a string' });
   }
 
   try {
@@ -102,8 +98,12 @@ export const getJokesFromElastic = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(200).json(result.hits.hits);
+    // El tipo correcto para result
+    // const hits = result.hits.hits;
+
+    res.status(200).json(result);
   } catch (error) {
+    console.error('Failed to search jokes:', error);  // Log error
     res.status(500).json({ error: 'Failed to search jokes' });
   }
 };

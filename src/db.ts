@@ -5,7 +5,7 @@ import Theme from './models/theme';
 import Joke from './models/joke';
 dotenv.config();
 
-const sequelize = new Sequelize(`postgres://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,);
+const sequelize = new Sequelize(`postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.POSTGRES_NAME}`,);
 
 
 

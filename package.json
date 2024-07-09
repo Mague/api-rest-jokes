@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/Mague/api-rest-jokes#readme",
   "dependencies": {
-    "@elastic/elasticsearch": "^8.14.0",
+    "@elastic/elasticsearch": "^7.16.0",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",

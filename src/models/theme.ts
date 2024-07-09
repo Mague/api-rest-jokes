@@ -1,18 +1,31 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../db';
 
-class Theme extends Model {}
-Theme.init({
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+class Theme extends Model {
+  public id!: number;
+  public name!: string;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+Theme.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+  },
+  {
+    sequelize,
+    tableName: 'themes',
   }
-}, {
-  sequelize,
-  modelName: 'Theme',
-  tableName: 'themes',
-  timestamps: true
-});
+);
 
 export default Theme;
