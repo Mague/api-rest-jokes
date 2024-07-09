@@ -66,6 +66,8 @@ paths:
   /themes:
     post:
       summary: Crear un nuevo tema
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -193,3 +195,5 @@ securitySchemes:
     type: http
     scheme: bearer
     bearerFormat: JWT
+security:
+  - bearerAuth: []

@@ -6,6 +6,7 @@ import Theme from './models/theme';
 import Joke from './models/joke';
 import jokesRoutes from './routes/jokes';
 import routes from './routes';
+import { setupSwagger } from './swagger';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +14,8 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/', routes);
+
+setupSwagger(app);
 
 async function initialize() {
   try {
