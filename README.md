@@ -103,6 +103,8 @@ npm run test:coverage
 
 ## Endpoints Disponibles
 
+### Swagger
+- **Documentacion** `GET /api-docs`
 ### Usuarios
 
 - **Registro de Usuario**: `POST /users/register`
