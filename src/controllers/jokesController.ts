@@ -4,6 +4,7 @@ import User from '../models/user';
 import Theme from '../models/theme';
 import chuckService from '../services/chuckService';
 import dadService from '../services/dadService';
+import client from '../elasticsearch'; // Importa el cliente de Elasticsearch
 
 export const getRandomJoke = async (req: Request, res: Response) => {
   const { type } = req.params;
@@ -21,21 +22,30 @@ export const getRandomJoke = async (req: Request, res: Response) => {
 
 export const saveJoke = async (req: Request, res: Response) => {
   const { title, body, themeIds } = req.body;
-  const authorId = req.user.id; // Obtener el ID del usuario autenticado
-
-  if (!title) {
+  if (!title ) {
     return res.status(400).json({ error: 'Title is required' });
   }
-
-  if (!body) {
+  if (!body ) {
     return res.status(400).json({ error: 'Body is required' });
   }
+  const authorId = req.user.id; // Obtener el ID del usuario autenticado
 
   try {
     const joke = await Joke.create({ title, body, author_id: authorId });
     if (themeIds && themeIds.length > 0) {
       await joke.setThemes(themeIds);
     }
+
+    // Indexar en Elasticsearch
+    await client.index({
+      index: 'jokes',
+      body: {
+        id: joke.id,
+        title: joke.title,
+        body: joke.body,
+      },
+    });
+
     res.status(201).json(joke);
   } catch (error: any) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -67,4 +77,33 @@ export const deleteJoke = async (req: Request, res: Response) => {
   }
   await joke.destroy();
   res.status(204).send();
+};
+
+export const getJokesFromElastic = async (req: Request, res: Response) => {
+  const { query } = req.query;
+
+  if (typeof query !== 'string') {
+    return res.status(400).json({ error: 'Query parameter is required and must be a string' });
+  }
+
+  try {
+    const result = await client.search({
+      index: 'jokes',
+      body: {
+        query: {
+          match: {
+            title: query,
+          },
+        },
+      },
+    });
+
+    // El tipo correcto para result
+    // const hits = result.hits.hits;
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to search jokes:', error);  // Log error
+    res.status(500).json({ error: 'Failed to search jokes' });
+  }
 };

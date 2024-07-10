@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   postgres:
@@ -11,7 +11,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - elastic
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
@@ -25,6 +27,10 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
 
+networks:
+  elastic:
+    driver: bridge
+
 volumes:
-  postgres_data:
+  postgres-data:
   es_data:

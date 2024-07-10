@@ -1,26 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
 declare global {
-    namespace Express {
-      interface Request {
-        user: any; // Replace 'any' with the actual type of 'user'
-      }
+  namespace Express {
+    interface Request {
+      user: any; // Replace 'any' with the actual type of 'user'
     }
   }
-  
-const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
+}
+const jwtSecret = 'your_jwt_secret';
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = req.headers['authorization']?.split(' ')[1];
 
-  if (token == null) return res.sendStatus(401);
+  if (!token) {
+    return res.status(403).json({ error: 'No token provided' });
+  }
 
-  jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
+  jwt.verify(token, jwtSecret, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Failed to authenticate token' });
+    }
+
+    req.user = decoded as { id: number };
     next();
   });
 };

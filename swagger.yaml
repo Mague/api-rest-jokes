@@ -1,109 +1,32 @@
 openapi: 3.0.0
 info:
-  title: Jokes API
+  title: API Rest Jokes
+  description: API para manejar chistes, operaciones matemáticas, usuarios y temas.
   version: 1.0.0
-  description: API para la gestión de chistes, usuarios y temas.
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+
 paths:
-  /users/register:
-    post:
-      summary: Crear un nuevo usuario
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                password:
-                  type: string
-              required:
-                - name
-                - password
-      responses:
-        '201':
-          description: Usuario creado con éxito
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          description: El usuario ya existe
-        '500':
-          description: Error al crear el usuario
-  /users/login:
-    post:
-      summary: Iniciar sesión de usuario
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                password:
-                  type: string
-              required:
-                - name
-                - password
-      responses:
-        '200':
-          description: Inicio de sesión exitoso
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-        '401':
-          description: Credenciales inválidas
-        '500':
-          description: Error al iniciar sesión
-  /themes:
-    post:
-      summary: Crear un nuevo tema
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-              required:
-                - name
-      responses:
-        '201':
-          description: Tema creado con éxito
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Theme'
-        '500':
-          description: Error al crear el tema
+  /jokes/{type}:
     get:
-      summary: Obtener todos los temas
+      summary: Obtener un chiste aleatorio
+      parameters:
+        - name: type
+          in: path
+          description: Tipo de chiste (Chuck o Dad)
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: Lista de temas
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Theme'
-        '500':
-          description: Error al obtener los temas
+          description: Chiste obtenido correctamente
+        '400':
+          description: Tipo de chiste no válido
   /jokes:
     post:
-      summary: Crear un nuevo chiste
+      summary: Crear un chiste
       security:
         - bearerAuth: []
       requestBody:
@@ -121,79 +44,180 @@ paths:
                   type: array
                   items:
                     type: integer
-              required:
-                - title
-                - body
       responses:
         '201':
-          description: Chiste creado con éxito
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Joke'
+          description: Chiste creado correctamente
         '400':
-          description: El título del chiste ya existe
+          description: Error en la creación del chiste
         '500':
-          description: Error al crear el chiste
-  /jokes/{type}:
-    get:
-      summary: Obtener un chiste aleatorio por tipo
+          description: Error del servidor
+    delete:
+      summary: Eliminar un chiste
+      security:
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: type
+        - name: id
+          in: path
+          required: true
           schema:
-            type: string
-          required: false
-          description: Tipo de chiste (Chuck, Dad)
+            type: integer
+      responses:
+        '204':
+          description: Chiste eliminado correctamente
+        '404':
+          description: Chiste no encontrado
+  /jokes/{id}:
+    put:
+      summary: Actualizar un chiste
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
       responses:
         '200':
-          description: Chiste aleatorio
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    type: string
-                  joke:
-                    type: string
+          description: Chiste actualizado correctamente
+        '404':
+          description: Chiste no encontrado
+  /jokes/search:
+    delete:
+      summary: Buscar chistes en Elasticsearch
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chistes encontrados correctamente
         '400':
-          description: Tipo de chiste inválido
+          description: Parámetro de búsqueda no válido
+
+  /math/lcm:
+    get:
+      summary: Obtener el MCM de una lista de números
+      parameters:
+        - name: numbers
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: MCM calculado correctamente
+        '400':
+          description: Parámetro de números no válido
+
+  /math/increment:
+    get:
+      summary: Incrementar un número en 1
+      parameters:
+        - name: number
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Número incrementado correctamente
+        '400':
+          description: Parámetro de número no válido
+
+  /users/register:
+    post:
+      summary: Registrar un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Usuario registrado correctamente
+        '400':
+          description: Error en el registro del usuario
         '500':
-          description: Error al obtener el chiste
+          description: Error del servidor
+
+  /users/login:
+    post:
+      summary: Iniciar sesión de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Inicio de sesión correcto
+        '401':
+          description: Credenciales inválidas
+        '500':
+          description: Error del servidor
+
+  /themes:
+    post:
+      summary: Crear un tema
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Tema creado correctamente
+        '400':
+          description: Error en la creación del tema
+        '500':
+          description: Error del servidor
+    get:
+      summary: Obtener la lista de temas
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de temas obtenida correctamente
+        '500':
+          description: Error del servidor
+
 components:
-  schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        password:
-          type: string
-    Theme:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-    Joke:
-      type: object
-      properties:
-        id:
-          type: integer
-        title:
-          type: string
-        body:
-          type: string
-        author_id:
-          type: integer
-securitySchemes:
-  bearerAuth:
-    type: http
-    scheme: bearer
-    bearerFormat: JWT
-security:
-  - bearerAuth: []
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -7,18 +7,16 @@ import usersRoutes from '../routes/users';
 const app = express();
 app.use(express.json());
 app.use('/users', usersRoutes);
-
 beforeAll(async () => {
-  await sequelize.sync({ force: true }); // Sincroniza la base de datos antes de todas las pruebas
+  await sequelize.sync({ force: true });
 });
 
 afterAll(async () => {
-  // Cerrar la conexión a la base de datos
   await sequelize.close();
 });
+const generateRandomUsername = () => `testuser_${Math.random().toString(36).substring(2, 15)}`;
 
-const newUser = { name: `newuser${Math.random().toString(36).substring(7)}`, password: 'newpass' };
-const nonExistentuser = { name: `nonexistentuser${Math.random().toString(36).substring(7)}`, password: 'newpass' };
+const newUser = { name: generateRandomUsername(), password: 'newpass' };
 
 describe('POST /users/register', () => {
   it('should register a new user', async () => {
@@ -54,7 +52,7 @@ describe('POST /users/login', () => {
   it('should return a 401 error for invalid credentials', async () => {
     const response = await request(app)
       .post('/users/login')
-      .send({ name: nonExistentuser.name, password: nonExistentuser.password });
+      .send({ name: 'nonexistentuser', password: 'wrongpass' });
     expect(response.status).toBe(401);
     expect(response.body).toHaveProperty('error', 'Invalid credentials');
   });
