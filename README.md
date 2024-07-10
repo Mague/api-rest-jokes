@@ -34,9 +34,9 @@ npm install
 Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
 
 ```env
-DB_USER=
-DB_PASS=
-DB_NAME=
+POSTGRES_USER=
+POSTGRES_PASS=
+POSTGRES_NAME=
 DB_HOST=
 DB_PORT=
 JWT_SECRET=tu_secreto_jwt
@@ -60,9 +60,23 @@ Este comando levantará los servicios de PostgreSQL y pgAdmin en segundo plano.
 Ejecuta el siguiente comando para sincronizar la base de datos:
 
 ```bash
-npx sequelize-cli db:migrate
+npm run dev
+```
 ```
 
+
+await User.sync({ force: true });
+await Theme.sync({ force: true });
+await Joke.sync({ force: true });
+// Registra los modelos
+// Definir las asociaciones después de inicializar los modelos
+Joke.belongsToMany(Theme, { through: 'joke_themes' });
+Theme.belongsToMany(Joke, { through: 'joke_themes' });
+await sequelize.sync({
+  force: true,
+  logging: console.log // Esto imprimirá las consultas SQL en la consola
+});
+```
 ### 6. Ejecutar la API
 
 Inicia el servidor de desarrollo:
